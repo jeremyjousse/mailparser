@@ -1,0 +1,9 @@
+{
+  "name": "mailparser-frontend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "build": "spago --config spago.dhall bundle-app --main Mailparser.Frontend.Main --to dist/main.js"
+  }
+}
