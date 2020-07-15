@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d71edc6da9c17f5445b65bca426819ffb2d4988ba5ea93a21baf0f960b3d7e25
+-- hash: 9bcfe2f0dd6b5f3e4be95dbbeb5c43d683a826f82c747d7408b5848ad08ea1c3
 
 name:           api
 version:        0.1.0.0
@@ -29,7 +29,6 @@ library
   exposed-modules:
       Effects.Database.Types
       Lib
-      Model.Brand
   other-modules:
       Paths_api
   hs-source-dirs:
