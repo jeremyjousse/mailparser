@@ -24,6 +24,16 @@ share
   Sender
       from Text
       returnPath Text
-      brandId BrandId
+      brandId BrandId Maybe
       deriving Show
   |]
+
+instance FromJSON Brand where
+    parseJSON = withObject "Brand" $ \ brandJson -> do
+        name <- brandJson .: "name"
+        url <- brandJson .: "url"
+        pure Brand {brandName = name, brandUrl = url}
+
+instance ToJSON Brand where
+    toJSON Brand {brandName, brandUrl} =
+        object [ "name" .= brandName, "url" .= brandUrl ]

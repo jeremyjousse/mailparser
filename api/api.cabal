@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 9bcfe2f0dd6b5f3e4be95dbbeb5c43d683a826f82c747d7408b5848ad08ea1c3
+-- hash: 39ca8cb1880cdc10afafa52558bd912080adc6c1a2e6dcfaad06322fba45d086
 
 name:           api
 version:        0.1.0.0
@@ -27,6 +27,7 @@ source-repository head
 
 library
   exposed-modules:
+      Api
       Effects.Database.Types
       Lib
   other-modules:
@@ -46,6 +47,7 @@ library
     , servant-client
     , servant-server
     , text
+    , warp
   default-language: Haskell2010
 
 executable api-exe
@@ -69,6 +71,7 @@ executable api-exe
     , servant-client
     , servant-server
     , text
+    , warp
   default-language: Haskell2010
 
 test-suite api-test
@@ -93,4 +96,5 @@ test-suite api-test
     , servant-client
     , servant-server
     , text
+    , warp
   default-language: Haskell2010

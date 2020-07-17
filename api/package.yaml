@@ -31,6 +31,7 @@ dependencies:
   - servant-client
   - servant-server
   - text
+  - warp
 
 default-extensions:
   - BangPatterns
