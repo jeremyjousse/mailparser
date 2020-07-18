@@ -16,3 +16,7 @@ A sender is a model handling:
 - brandId: int (the brand identifier)
 
 It describes an email address sending brand communications
+
+## Roadmap
+
+Add Google API authentication [Tutorial](https://whatthefunctional.wordpress.com/2018/07/01/google-sheets-and-haskell/) and [Code](https://github.com/WhatTheFunctional/GoogleSheetsDemo)
