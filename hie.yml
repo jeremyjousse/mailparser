@@ -1,0 +1,9 @@
+# This file is used by https://github.com/mpickering/hie-bios (itself used by Haskell Language Server) to discover Haskell components and link to sources
+cradle:
+  stack:
+    - path: "./api/src"
+      component: "api:lib"
+    - path: "./api/app"
+      component: "api:exe:api-exe"
+    - path: "./api/test"
+      component: "api:test:api-test"
