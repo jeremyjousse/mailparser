@@ -16,3 +16,7 @@ A sender is a model handling:
 - brandId: int (the brand identifier)
 
 It describes an email address sending brand communications
+
+## Develop
+
+Copy and edit `api/.env.sample` to `api/.env`.
