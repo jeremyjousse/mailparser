@@ -23,6 +23,8 @@ dependencies:
   - aeson
   - base
   - http-api-data
+  - http-client
+  - http-client-tls
   - monad-logger
   - path-pieces
   - persistent
