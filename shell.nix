@@ -2,6 +2,9 @@
 
 pkgs.mkShell {
   buildInputs = [
+    pkgs.docker
+    pkgs.docker-compose
+    pkgs.nodejs-12_x
     pkgs.postgresql_12
   ];
 
