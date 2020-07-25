@@ -18,17 +18,18 @@ getToken = do
     eitherGoogleAuthClientSecret <- checkEnvVar "GOOGLE_AUTH_CLIENT_SECRET"
     eitherGoogleAuthClientId     <- checkEnvVar "GOOGLE_AUTH_CLIENT_ID"
     eitherGoogleAuthCode         <- checkEnvVar "GOOGLE_AUTH_CODE"
+    eitherGoogleAuthRefreshToken <- checkEnvVar "GOOGLE_AUTH_REFRESH_TOKEN"
 
-    case (eitherGoogleAuthClientId, eitherGoogleAuthClientSecret, eitherGoogleAuthCode) of
-        (Right googleAuthClientId,  Right googleAuthClientSecret, Right googleAuthCode) -> do
-            googleAuthResponse <- callGoogleAuthApi googleAuthClientId googleAuthClientSecret googleAuthCode
+    case (eitherGoogleAuthClientId, eitherGoogleAuthClientSecret, eitherGoogleAuthRefreshToken) of
+        (Right googleAuthClientId,  Right googleAuthClientSecret, Right googleAuthRefreshToken) -> do
+            googleAuthResponse <- callGoogleAuthApi googleAuthClientId googleAuthClientSecret googleAuthRefreshToken
             case googleAuthResponse of
                 Left error -> do
                     putStrLn ("Bad google token response: " ++ error)
                     throw ( GoogleAuthGetTokenException error)
                 Right googleAuthToken -> pure googleAuthToken
         _ -> do
-            let errors = lefts [eitherGoogleAuthClientId, eitherGoogleAuthClientSecret, eitherGoogleAuthCode]
+            let errors = lefts [eitherGoogleAuthClientId, eitherGoogleAuthClientSecret, eitherGoogleAuthRefreshToken]
             putStrLn ("Missing env vars: " ++ show errors)
             throw (GoogleAuthEnvVarException errors)
 
@@ -41,11 +42,11 @@ checkEnvVar var = do
 
 
 callGoogleAuthApi :: String -> String -> String -> IO (Either String String)
-callGoogleAuthApi googleAuthClientId googleAuthClientSecret googleAuthCode = do
-    let googleAuthRequest = GoogleAuthRequest { grantType = "authorization_code"
-    , code = googleAuthCode
+callGoogleAuthApi googleAuthClientId googleAuthClientSecret googleAuthRefreshToken = do
+    let googleAuthRequest = GoogleAuthRequest { grantType = "refresh_token"
     , clientId = googleAuthClientId
     , clientSecret = googleAuthClientSecret
+    , refreshToken = googleAuthRefreshToken
     , redirectUri = "urn:ietf:wg:oauth:2.0:oob" }
 
     manager' <- newManager tlsManagerSettings
@@ -56,6 +57,7 @@ callGoogleAuthApi googleAuthClientId googleAuthClientSecret googleAuthCode = do
 
 googleAuthAPI :: Proxy GoogleAuthAPI
 googleAuthAPI = Proxy
+
 
 postToken :: GoogleAuthRequest -> ClientM GoogleAuthResponse
 postToken = client googleAuthAPI
@@ -68,32 +70,32 @@ data GoogleAuthToken = GoogleAuthToken {
 data GoogleAuthResponse = GoogleAuthResponse {accessToken :: String,
                                   tokenType :: String,
                                   expiresIn :: Int,
-                                  refreshToken :: String}
+                                  scope :: String}
 
 instance FromJSON GoogleAuthResponse where
     parseJSON = withObject "GoogleAuthResponse" $ \ googleAuthResponseJson -> do
             accessToken <- googleAuthResponseJson .: "access_token"
             tokenType <- googleAuthResponseJson .: "token_type"
             expiresIn <- googleAuthResponseJson .: "expires_in"
-            refreshToken <- googleAuthResponseJson .: "refresh_token"
+            scope <- googleAuthResponseJson .: "scope"
             pure GoogleAuthResponse {accessToken = accessToken
             , tokenType = tokenType
             , expiresIn = expiresIn
-            , refreshToken = refreshToken
+            , scope = scope
             }
 
 data GoogleAuthRequest = GoogleAuthRequest {grantType :: String,
-                                  code :: String,
                                   clientId :: String,
                                   clientSecret :: String,
+                                  refreshToken :: String,
                                   redirectUri :: String}
 
 instance ToForm GoogleAuthRequest where 
     toForm googleAuthRequest =
         [ ("grant_ype", toQueryParam (grantType googleAuthRequest))
-        , ("code", toQueryParam (code googleAuthRequest)) 
         , ("client_id", toQueryParam (clientId googleAuthRequest))
         , ("client_secret", toQueryParam (clientSecret googleAuthRequest))
+        , ("refresh_token", toQueryParam (refreshToken googleAuthRequest))
         , ("redirect_url", toQueryParam (redirectUri googleAuthRequest)) ]
 
 data GoogleAuthException = GoogleAuthEnvVarException [String] | GoogleAuthGetTokenException String
