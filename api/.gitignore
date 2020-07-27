@@ -2,3 +2,5 @@
 .stack-work/
 api.cabal
 *~
+
+.docker
