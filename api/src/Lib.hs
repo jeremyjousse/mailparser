@@ -15,7 +15,8 @@ import           Data.Text.Lazy                 ( fromStrict )
 import           Data.Text.Lazy.Encoding
 import           Network.Wai.Handler.Warp      as Warp
 
-connStr = "host=localhost dbname=test user=test password=test port=5432"
+connStr =
+  "host=localhost dbname=postgres user=postgres password=postgres port=5432"
 
 server :: ConnectionPool -> Server Api
 server pool = brandAddH :<|> brandGetH :<|> brandDeleteH :<|> brandUpdateH
