@@ -92,7 +92,7 @@ data GoogleAuthRequest = GoogleAuthRequest {grantType :: String,
 
 instance ToForm GoogleAuthRequest where 
     toForm googleAuthRequest =
-        [ ("grant_ype", toQueryParam (grantType googleAuthRequest))
+        [ ("grant_type", toQueryParam (grantType googleAuthRequest))
         , ("client_id", toQueryParam (clientId googleAuthRequest))
         , ("client_secret", toQueryParam (clientSecret googleAuthRequest))
         , ("refresh_token", toQueryParam (refreshToken googleAuthRequest))
