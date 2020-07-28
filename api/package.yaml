@@ -32,6 +32,7 @@ dependencies:
   - persistent-template
   - servant
   - servant-client
+  - servant-client-core
   - servant-server
   - text
   - warp
