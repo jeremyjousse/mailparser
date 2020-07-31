@@ -44,10 +44,10 @@ server pool = brandAddH :<|> brandGetH :<|> brandDeleteH :<|> brandUpdateH
         mBrand <- selectFirst [BrandId ==. id] []
         case mBrand of
           Nothing ->
-            pure $ Left $ "The band " <> pack (show id) <> " is not present"
+            pure $ Left $ "The brand " <> pack (show id) <> " is not present"
           Just _ -> do
             delete id
-            pure $ Right $ "The band " <> pack (show id) <> " is deleted"
+            pure $ Right $ "The brand " <> pack (show id) <> " is deleted"
       case result of
         Left errorMessage ->
           throwError $ err404 {errBody = encodeUtf8 $ fromStrict $ errorMessage}
@@ -58,10 +58,10 @@ server pool = brandAddH :<|> brandGetH :<|> brandDeleteH :<|> brandUpdateH
         mBrand <- selectFirst [BrandId ==. id] []
         case mBrand of
           Nothing ->
-            pure $ Left $ "The band " <> pack (show id) <> " is not present"
+            pure $ Left $ "The brand " <> pack (show id) <> " is not present"
           Just _ -> do
             replace id brand
-            pure $ Right $ "The band " <> pack (show id) <> " is updated"
+            pure $ Right $ "The brand " <> pack (show id) <> " is updated"
       case result of
         Left errorMessage ->
           throwError $ err404 {errBody = encodeUtf8 $ fromStrict $ errorMessage}
