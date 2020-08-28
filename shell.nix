@@ -41,7 +41,7 @@ let
         --add-flags "\
           --nix \
           --no-nix-pure \
-          --nix-shell-file nix/stack-integration.nix \
+          --nix-shell-file ../nix/stack-integration.nix \
         "
     '';
   };
