@@ -41,7 +41,7 @@ let
         --add-flags "\
           --nix \
           --no-nix-pure \
-          --nix-shell-file nix/stack-integration.nix \
+          --nix-shell-file ../nix/stack-integration.nix \
         "
     '';
   };
@@ -67,7 +67,7 @@ in mkShell {
     # Haddock parsing and search
     haskell.packages.${ghcCompiler}.hoogle
     # Language Server Protocol (e.g. to use an LSP plugin in VS Code, Atom, Emacs, etc.) #
-    haskell.packages.${ghcCompiler}.haskell-language-server
+    # haskell.packages.${ghcCompiler}.haskell-language-server
     # Needed by hie-bios, see https://github.com/haskell/haskell-language-server/issues/176
     haskell.packages.${ghcCompiler}.tasty-discover
 
