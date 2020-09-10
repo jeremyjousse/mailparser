@@ -5,9 +5,11 @@ import Data.Aeson
 import Data.Proxy
 import Data.Text (Text)
 import GHC.Generics
+import Gmail.Types
 import GoogleAuth
 import Network.HTTP.Client (newManager)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
+import Network.HTTP.Types.Status
 import Servant.API hiding (addHeader)
 import Servant.Client
 import Servant.Client.Core (AuthClientData, AuthenticatedRequest, Request, addHeader, mkAuthenticatedRequest)
@@ -22,53 +24,64 @@ authenticateReq :: String -> Request -> Request
 authenticateReq s req = addHeader "Authorization" s req
 
 type GmailAPI =
-  "gmail" :> "v1" :> "users" :> "me" :> "messages" :> AuthProtect "token" :> Get '[JSON] GmailMessageList
+  "gmail" :> "v1" :> "users" :> "me" :> "messages" :> QueryParam "labelIds" String :> AuthProtect "token" :> Get '[JSON] GmailMessageList
+    :<|> "gmail" :> "v1" :> "users" :> "me" :> "messages" :> Capture "threadId" String :> AuthProtect "token" :> Get '[JSON] GmailMessageDetail
+    :<|> "gmail" :> "v1" :> "users" :> "me" :> "messages" :> Capture "threadId" String :> "modify" :> ReqBody '[JSON] GmailMessageLabelUpdateRequest :> AuthProtect "token" :> Post '[JSON] GmailMessageLabelUpdateResponse
 
--- labelIds=UNREAD
-listMessages :: IO (Either String [GmailMessage])
+data GmailError = InvalidToken String | HttpConnectionError String | UnknownError String
+  deriving (Show)
+
+listMessages :: IO (Either GmailError [GmailMessage])
 listMessages = do
   token <- getToken
-  -- let token = "ya29.a0AfH6SMAY5N0D9zk4WkbsZfw6Nc11msk1xYNQo42L2R39zawN0It0vfTyMovZu3GvUem23vhqhEAs3YF4etFwu3zrxWDqUH3r8oN94UBTuSbKPneGRj8Id6E0Q7sAGkTrWH3DoDbcMSe61f7UGrO1Z1TmWxz3Fc8ZGpaLcQ"
-  gmailMessageListResponse <- callGmailMessageListApi ("Bearer " ++ token)
-  case gmailMessageListResponse of
-    Left error -> do
-      -- TODO we must return a string for Left
-      putStrLn ("Bad Gmail API response: " ++ error)
-      throw (GmailGetMessageListException error)
-    Right gmailMessageList -> pure $ Right gmailMessageList
+  callGmailMessageListApi (Just "UNREAD") ("Bearer " ++ token)
 
-callGmailMessageListApi :: String -> IO (Either String [GmailMessage])
-callGmailMessageListApi token = do
+messageDetail :: String -> IO (Either GmailError GmailMessageDetail)
+messageDetail messageId = do
+  token <- getToken
+  callGmailMessageDetailApi messageId ("Bearer " ++ token)
+
+updateMessageLabels :: String -> GmailMessageLabelUpdateRequest -> IO (Either GmailError GmailMessageLabelUpdateResponse)
+updateMessageLabels messageId labels = do
+  token <- getToken
+  callGmailMessageLabelUpdateApi messageId labels ("Bearer " ++ token)
+
+-- markMessageAsRead
+
+callGmailMessageDetailApi :: String -> String -> IO (Either GmailError GmailMessageDetail)
+callGmailMessageDetailApi messageId token = do
   manager' <- newManager tlsManagerSettings
-  res <- runClientM (getGmailMessageList (mkAuthenticatedRequest token authenticateReq)) (mkClientEnv manager' (BaseUrl Https "www.googleapis.com" 443 ""))
+  res <- runClientM (getGmailMessageDetail messageId (mkAuthenticatedRequest token authenticateReq)) (mkClientEnv manager' (BaseUrl Https "www.googleapis.com" 443 ""))
   pure $ case res of
-    Left error -> Left $ show error
+    Left err -> Left (extractError err)
+    Right gmailMessageDetail -> Right gmailMessageDetail
+
+callGmailMessageListApi :: Maybe String -> String -> IO (Either GmailError [GmailMessage])
+callGmailMessageListApi label token = do
+  manager' <- newManager tlsManagerSettings
+  res <- runClientM (getGmailMessageList label (mkAuthenticatedRequest token authenticateReq)) (mkClientEnv manager' (BaseUrl Https "www.googleapis.com" 443 ""))
+  pure $ case res of
+    Left err -> Left (extractError err)
     -- Use constructor using the argument order
     -- Right (GmailMessageList gmailMessageList) -> Right gmailMessageList
     -- Use constructor using the argument name = more safe
     Right GmailMessageList {messages = gmailMessageList} -> Right gmailMessageList
 
-getGmailMessageList :: AuthenticatedRequest (AuthProtect "token") -> ClientM GmailMessageList
-getGmailMessageList = client gmailAPI
+callGmailMessageLabelUpdateApi :: String -> GmailMessageLabelUpdateRequest -> String -> IO (Either GmailError GmailMessageLabelUpdateResponse)
+callGmailMessageLabelUpdateApi messageId labels token = do
+  manager' <- newManager tlsManagerSettings
+  res <- runClientM (updateGmailMessageLabels messageId labels (mkAuthenticatedRequest token authenticateReq)) (mkClientEnv manager' (BaseUrl Https "www.googleapis.com" 443 ""))
+  pure $ case res of
+    Left err -> Left (extractError err)
+    Right gmailMessageLabelUpdateResponse -> Right gmailMessageLabelUpdateResponse
 
-data GmailMessage = GmailMessage
-  { id :: String,
-    threadId :: String
-  }
-  deriving (Generic)
+-- extractGmailResponseOrError :: Either ClientError GmailMessageList|GmailMessageDetail -> IO (Either GmailError [GmailMessage]|GmailMessageDetail)
+extractError :: ClientError -> GmailError
+extractError (ConnectionError error) = HttpConnectionError (show error)
+extractError (FailureResponse _ (Response {responseStatusCode, responseBody})) | responseStatusCode == status401 = InvalidToken (show responseBody)
+extractError clientError = UnknownError ("Unknown error" <> show clientError)
 
-instance FromJSON GmailMessage
-
-newtype GmailMessageList = GmailMessageList
-  { messages :: [GmailMessage]
-  }
-  deriving (Generic)
-
-instance FromJSON GmailMessageList
-
-data GmailException = GmailGetMessageListException String | GmailGetMessageException String
-  deriving (Show)
-
-instance Exception GmailException
-
--- exemple: https://gist.github.com/krisis/891d0f9984a491e471142f1829785d71
+getGmailMessageList :: Maybe String -> AuthenticatedRequest (AuthProtect "token") -> ClientM GmailMessageList
+getGmailMessageDetail :: String -> AuthenticatedRequest (AuthProtect "token") -> ClientM GmailMessageDetail
+updateGmailMessageLabels :: String -> GmailMessageLabelUpdateRequest -> AuthenticatedRequest (AuthProtect "token") -> ClientM GmailMessageLabelUpdateResponse
+getGmailMessageList :<|> getGmailMessageDetail :<|> updateGmailMessageLabels = client gmailAPI

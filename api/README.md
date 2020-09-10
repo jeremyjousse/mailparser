@@ -26,7 +26,9 @@ Persist Gmail token using [IORef](https://hackage.haskell.org/package/base-4.14.
 ## Develop
 
 ```bash
-cd api && stack repl
+cd api
+export $(cat .env | xargs)
+stack repl
 :load Gmail
 listMessages
 ```
