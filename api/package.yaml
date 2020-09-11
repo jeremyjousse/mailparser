@@ -25,6 +25,7 @@ dependencies:
   - http-api-data
   - http-client
   - http-client-tls
+  - http-types
   - monad-logger
   - path-pieces
   - persistent
@@ -32,6 +33,7 @@ dependencies:
   - persistent-template
   - servant
   - servant-client
+  - servant-client-core
   - servant-server
   - text
   - warp
