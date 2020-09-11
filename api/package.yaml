@@ -22,6 +22,10 @@ description: Please see the README on GitHub at <https://github.com/jeremyjousse
 dependencies:
   - aeson
   - base
+  - http-api-data
+  - http-client
+  - http-client-tls
+  - http-types
   - monad-logger
   - path-pieces
   - persistent
@@ -29,6 +33,7 @@ dependencies:
   - persistent-template
   - servant
   - servant-client
+  - servant-client-core
   - servant-server
   - text
   - warp
