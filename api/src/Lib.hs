@@ -16,15 +16,16 @@ import Network.Wai.Handler.Warp as Warp
 import Servant
 
 connStr =
-  "host=localhost dbname=postgres user=postgres password=postgres port=5432"
+  "host=localhost dbname=mailparser user=postgres password=postgres port=5432"
 
 server :: ConnectionPool -> Server Api
-server pool = brandAddH :<|> brandGetH :<|> brandDeleteH :<|> brandUpdateH
+server pool = brandAddH :<|> brandGetH :<|> brandDeleteH :<|> brandUpdateH :<|> gmailMessagesUpdateH
   where
     brandAddH newBrand = liftIO $ brandAdd newBrand
     brandGetH id = liftIO $ brandGet id
     brandDeleteH id = brandDelete id
     brandUpdateH id brand = brandUpdate id brand
+    gmailMessagesUpdateH = gmailMessagesUpdate
 
     brandAdd :: Brand -> IO (Maybe (Key Brand))
     brandAdd newBrand = flip runSqlPersistMPool pool $ do
@@ -52,6 +53,7 @@ server pool = brandAddH :<|> brandGetH :<|> brandDeleteH :<|> brandUpdateH
         Left errorMessage ->
           throwError $ err404 {errBody = encodeUtf8 $ fromStrict $ errorMessage}
         Right deleteMessage -> pure deleteMessage
+
     brandUpdate :: (Key Brand) -> Brand -> Handler Text
     brandUpdate id brand = do
       result <- flip liftSqlPersistMPool pool $ do
@@ -66,6 +68,11 @@ server pool = brandAddH :<|> brandGetH :<|> brandDeleteH :<|> brandUpdateH
         Left errorMessage ->
           throwError $ err404 {errBody = encodeUtf8 $ fromStrict $ errorMessage}
         Right deleteMessage -> pure deleteMessage
+    
+    gmailMessagesUpdate :: Handler Text
+    gmailMessagesUpdate = pure "updateGmailMessages"
+    -- List messages
+    -- Insert each message to db and update message labels
 
 app :: ConnectionPool -> Application
 app pool = serve api $ server pool
@@ -73,8 +80,11 @@ app pool = serve api $ server pool
 mkPostgresApp :: IO Application
 mkPostgresApp = runStderrLoggingT $
   withPostgresqlPool connStr 10 $ \pool -> do
-    liftIO $ runSqlPersistMPool (runMigration migrateAll) pool
-    pure $ app pool
+    liftIO $ do
+      flip runSqlPersistMPool pool do
+         runMigration migrateAll
+         gmailMessageId <- insert $ GmailMessage "1234" "test" "txt"
+         pure $ app pool
 
 run :: IO ()
 run = do

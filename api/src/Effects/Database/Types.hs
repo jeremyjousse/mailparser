@@ -29,6 +29,11 @@ share
       name Text
       url Text
       deriving Show
+  GmailMessage
+      threadId Text
+      snippet Text
+      mimeType Text
+      deriving Show
   Sender
       from Text
       returnPath Text
@@ -45,3 +50,14 @@ instance FromJSON Brand where
 instance ToJSON Brand where
   toJSON Brand {brandName, brandUrl} =
     object ["name" .= brandName, "url" .= brandUrl]
+
+instance FromJSON GmailMessage where
+  parseJSON = withObject "GmailMessage" $ \gmailMessageJson -> do
+    threadId <- gmailMessageJson .: "threadId"
+    snippet <- gmailMessageJson .: "snippet"
+    mimeType <- gmailMessageJson .: "mimeType"
+    pure GmailMessage {gmailMessageThreadId = threadId, gmailMessageSnippet = snippet, gmailMessageMimeType = mimeType}
+
+instance ToJSON GmailMessage where
+  toJSON GmailMessage {gmailMessageThreadId, gmailMessageSnippet, gmailMessageMimeType} =
+    object ["threadId" .= gmailMessageThreadId, "snippet" .= gmailMessageSnippet, "mimeType" .= gmailMessageMimeType]
