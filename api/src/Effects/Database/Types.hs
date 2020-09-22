@@ -32,7 +32,9 @@ share
   GmailMessage
       threadId Text
       snippet Text
-      mimeType Text
+      sizeEstimate Int
+      historyId Text
+      internalDate Text
       deriving Show
   Sender
       from Text
@@ -55,9 +57,24 @@ instance FromJSON GmailMessage where
   parseJSON = withObject "GmailMessage" $ \gmailMessageJson -> do
     threadId <- gmailMessageJson .: "threadId"
     snippet <- gmailMessageJson .: "snippet"
-    mimeType <- gmailMessageJson .: "mimeType"
-    pure GmailMessage {gmailMessageThreadId = threadId, gmailMessageSnippet = snippet, gmailMessageMimeType = mimeType}
+    sizeEstimate <- gmailMessageJson .: "sizeEstimate"
+    historyId <- gmailMessageJson .: "historyId"
+    internalDate <- gmailMessageJson .: "internalDate"
+    pure
+      GmailMessage
+        { gmailMessageThreadId = threadId,
+          gmailMessageSnippet = snippet,
+          gmailMessageSizeEstimate = sizeEstimate,
+          gmailMessageHistoryId = historyId,
+          gmailMessageInternalDate = internalDate
+        }
 
 instance ToJSON GmailMessage where
-  toJSON GmailMessage {gmailMessageThreadId, gmailMessageSnippet, gmailMessageMimeType} =
-    object ["threadId" .= gmailMessageThreadId, "snippet" .= gmailMessageSnippet, "mimeType" .= gmailMessageMimeType]
+  toJSON GmailMessage {gmailMessageThreadId, gmailMessageSnippet, gmailMessageSizeEstimate, gmailMessageHistoryId, gmailMessageInternalDate} =
+    object
+      [ "threadId" .= gmailMessageThreadId,
+        "snippet" .= gmailMessageSnippet,
+        "sizeEstimate" .= gmailMessageSizeEstimate,
+        "historyId" .= gmailMessageHistoryId,
+        "internalDate" .= gmailMessageInternalDate
+      ]

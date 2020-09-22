@@ -3,6 +3,7 @@ module Lib where
 import Api
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (runStderrLoggingT)
+import Controller.Gmail
 import Data.Text
   ( Text,
     pack,
@@ -12,6 +13,7 @@ import Data.Text.Lazy.Encoding
 import Database.Persist
 import Database.Persist.Postgresql
 import Effects.Database.Types
+import Gmail
 import Network.Wai.Handler.Warp as Warp
 import Servant
 
@@ -25,7 +27,7 @@ server pool = brandAddH :<|> brandGetH :<|> brandDeleteH :<|> brandUpdateH :<|> 
     brandGetH id = liftIO $ brandGet id
     brandDeleteH id = brandDelete id
     brandUpdateH id brand = brandUpdate id brand
-    gmailMessagesUpdateH = gmailMessagesUpdate
+    gmailMessagesUpdateH = updateGmailMessages pool
 
     brandAdd :: Brand -> IO (Maybe (Key Brand))
     brandAdd newBrand = flip runSqlPersistMPool pool $ do
@@ -67,12 +69,7 @@ server pool = brandAddH :<|> brandGetH :<|> brandDeleteH :<|> brandUpdateH :<|> 
       case result of
         Left errorMessage ->
           throwError $ err404 {errBody = encodeUtf8 $ fromStrict $ errorMessage}
-        Right deleteMessage -> pure deleteMessage
-    
-    gmailMessagesUpdate :: Handler Text
-    gmailMessagesUpdate = pure "updateGmailMessages"
-    -- List messages
-    -- Insert each message to db and update message labels
+        Right updateMessage -> pure updateMessage
 
 app :: ConnectionPool -> Application
 app pool = serve api $ server pool
@@ -82,9 +79,8 @@ mkPostgresApp = runStderrLoggingT $
   withPostgresqlPool connStr 10 $ \pool -> do
     liftIO $ do
       flip runSqlPersistMPool pool do
-         runMigration migrateAll
-         gmailMessageId <- insert $ GmailMessage "1234" "test" "txt"
-         pure $ app pool
+        runMigration migrateAll
+        pure $ app pool
 
 run :: IO ()
 run = do
