@@ -37,11 +37,12 @@ updateGmailMessage pool gmailMessage@GmailMessage {threadId} = do
       pure $ Right gmailMessage
 
 mappGmailMessageDetailHttpToGmailMessageDb :: GmailMessageDetail -> Db.GmailMessage
-mappGmailMessageDetailHttpToGmailMessageDb GmailMessageDetail {id, threadId, labelIds, snippet, payload, sizeEstimate, historyId, internalDate} =
+mappGmailMessageDetailHttpToGmailMessageDb GmailMessageDetail {id, threadId, labelIds, snippet, payload, sizeEstimate, historyId, internalDate, payload} =
   Db.GmailMessage
     { Db.gmailMessageThreadId = pack threadId,
       Db.gmailMessageSnippet = pack snippet,
       Db.gmailMessageSizeEstimate = sizeEstimate,
       Db.gmailMessageHistoryId = pack historyId,
-      Db.gmailMessageInternalDate = pack internalDate
+      Db.gmailMessageInternalDate = pack internalDate,
+      Db.gmailMessageMimeType = pack mimeType payload
     }

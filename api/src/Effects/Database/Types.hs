@@ -35,7 +35,17 @@ share
       sizeEstimate Int
       historyId Text
       internalDate Text
+      mimeType Text
       deriving Show
+  GmailMessageHeader
+      name Text
+      value Text
+      gmailMessage GmailMessageId
+  GmailMessagePart
+      partId Int
+      data Text
+      mimeType Text
+      gmailMessage GmailMessageId
   Sender
       from Text
       returnPath Text
@@ -60,21 +70,24 @@ instance FromJSON GmailMessage where
     sizeEstimate <- gmailMessageJson .: "sizeEstimate"
     historyId <- gmailMessageJson .: "historyId"
     internalDate <- gmailMessageJson .: "internalDate"
+    mimeType <- gmailMessageJson .: "mimeType"
     pure
       GmailMessage
         { gmailMessageThreadId = threadId,
           gmailMessageSnippet = snippet,
           gmailMessageSizeEstimate = sizeEstimate,
           gmailMessageHistoryId = historyId,
-          gmailMessageInternalDate = internalDate
+          gmailMessageInternalDate = internalDate,
+          gmailMessageMimeType = mimeType
         }
 
 instance ToJSON GmailMessage where
-  toJSON GmailMessage {gmailMessageThreadId, gmailMessageSnippet, gmailMessageSizeEstimate, gmailMessageHistoryId, gmailMessageInternalDate} =
+  toJSON GmailMessage {gmailMessageThreadId, gmailMessageSnippet, gmailMessageSizeEstimate, gmailMessageHistoryId, gmailMessageInternalDate, gmailMessageMimeType} =
     object
       [ "threadId" .= gmailMessageThreadId,
         "snippet" .= gmailMessageSnippet,
         "sizeEstimate" .= gmailMessageSizeEstimate,
         "historyId" .= gmailMessageHistoryId,
-        "internalDate" .= gmailMessageInternalDate
+        "internalDate" .= gmailMessageInternalDate,
+        "mimeType" .= gmailMessageMimeType
       ]
