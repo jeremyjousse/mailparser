@@ -37,12 +37,16 @@ updateGmailMessage pool gmailMessage@GmailMessage {threadId} = do
       pure $ Right gmailMessage
 
 mappGmailMessageDetailHttpToGmailMessageDb :: GmailMessageDetail -> Db.GmailMessage
-mappGmailMessageDetailHttpToGmailMessageDb GmailMessageDetail {id, threadId, labelIds, snippet, payload, sizeEstimate, historyId, internalDate, payload} =
+mappGmailMessageDetailHttpToGmailMessageDb GmailMessageDetail {id, threadId, labelIds, snippet, payload, sizeEstimate, historyId, internalDate} =
   Db.GmailMessage
     { Db.gmailMessageThreadId = pack threadId,
       Db.gmailMessageSnippet = pack snippet,
       Db.gmailMessageSizeEstimate = sizeEstimate,
       Db.gmailMessageHistoryId = pack historyId,
       Db.gmailMessageInternalDate = pack internalDate,
-      Db.gmailMessageMimeType = pack mimeType payload
+      Db.gmailMessageMimeType = pack (extractMimeType payload)
     }
+
+-- TODO Is this the best way to do, can it be done nativeliy on line 47?
+extractMimeType :: GmailMessagePayload -> String
+extractMimeType GmailMessagePayload {mimeType} = mimeType
