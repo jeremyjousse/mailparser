@@ -5,6 +5,7 @@ import Data.Aeson
 import Data.Proxy
 import Data.Text (Text)
 import GHC.Generics
+import Gmail.MessagePartType
 import GoogleAuth
 import Network.HTTP.Client (newManager)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
@@ -69,17 +70,6 @@ instance FromJSON GmailMessageBody where
         { size = size,
           maybeData = maybeData
         }
-
-data GmailMessagePart = GmailMessagePart
-  { partId :: String,
-    mimeType :: String,
-    filename :: String,
-    headers :: [GmailMessageHeader],
-    body :: GmailMessageBody
-  }
-  deriving (Generic, Show)
-
-instance FromJSON GmailMessagePart
 
 newtype GmailMessageList = GmailMessageList
   { messages :: [GmailMessage]
