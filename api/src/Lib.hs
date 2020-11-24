@@ -1,82 +1,40 @@
-module Lib where
+module Lib (runApp) where
 
 import Api
+import App
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (runStderrLoggingT)
-import Data.Text
-  ( Text,
-    pack,
-  )
-import Data.Text.Lazy (fromStrict)
-import Data.Text.Lazy.Encoding
-import Database.Persist
+import Control.Monad.Trans.Reader
+import Controller.Gmail
 import Database.Persist.Postgresql
 import Effects.Database.Types
 import Network.Wai.Handler.Warp as Warp
 import Servant
 
+-- For more inspiration see
+-- https://github.com/parsonsmatt/servant-persistent
+
 connStr =
-  "host=localhost dbname=postgres user=postgres password=postgres port=5432"
+  "host=localhost dbname=mailparser user=postgres password=postgres port=5432"
 
-server :: ConnectionPool -> Server Api
-server pool = brandAddH :<|> brandGetH :<|> brandDeleteH :<|> brandUpdateH
-  where
-    brandAddH newBrand = liftIO $ brandAdd newBrand
-    brandGetH id = liftIO $ brandGet id
-    brandDeleteH id = brandDelete id
-    brandUpdateH id brand = brandUpdate id brand
-
-    brandAdd :: Brand -> IO (Maybe (Key Brand))
-    brandAdd newBrand = flip runSqlPersistMPool pool $ do
-      exists <- selectFirst [BrandName ==. (brandName newBrand)] []
-      case exists of
-        Nothing -> Just <$> insert newBrand
-        Just _ -> return Nothing
-
-    brandGet :: (Key Brand) -> IO (Maybe Brand)
-    brandGet id = flip runSqlPersistMPool pool $ do
-      mBrand <- selectFirst [BrandId ==. id] []
-      return $ entityVal <$> mBrand
-
-    brandDelete :: (Key Brand) -> Handler Text
-    brandDelete id = do
-      result <- flip liftSqlPersistMPool pool $ do
-        mBrand <- selectFirst [BrandId ==. id] []
-        case mBrand of
-          Nothing ->
-            pure $ Left $ "The brand " <> pack (show id) <> " is not present"
-          Just _ -> do
-            delete id
-            pure $ Right $ "The brand " <> pack (show id) <> " is deleted"
-      case result of
-        Left errorMessage ->
-          throwError $ err404 {errBody = encodeUtf8 $ fromStrict $ errorMessage}
-        Right deleteMessage -> pure deleteMessage
-    brandUpdate :: (Key Brand) -> Brand -> Handler Text
-    brandUpdate id brand = do
-      result <- flip liftSqlPersistMPool pool $ do
-        mBrand <- selectFirst [BrandId ==. id] []
-        case mBrand of
-          Nothing ->
-            pure $ Left $ "The brand " <> pack (show id) <> " is not present"
-          Just _ -> do
-            replace id brand
-            pure $ Right $ "The brand " <> pack (show id) <> " is updated"
-      case result of
-        Left errorMessage ->
-          throwError $ err404 {errBody = encodeUtf8 $ fromStrict $ errorMessage}
-        Right deleteMessage -> pure deleteMessage
-
-app :: ConnectionPool -> Application
-app pool = serve api $ server pool
+runApp :: IO ()
+runApp = do
+  application <- mkPostgresApp
+  Warp.run 3000 application
 
 mkPostgresApp :: IO Application
 mkPostgresApp = runStderrLoggingT $
   withPostgresqlPool connStr 10 $ \pool -> do
-    liftIO $ runSqlPersistMPool (runMigration migrateAll) pool
-    pure $ app pool
+    liftIO $ do
+      flip runSqlPersistMPool pool do
+        runMigration migrateAll
+        pure $ app pool
 
-run :: IO ()
-run = do
-  application <- mkPostgresApp
-  Warp.run 3000 application
+app :: ConnectionPool -> Application
+app pool = serve api (server pool)
+
+server :: ConnectionPool -> Server Api
+server pool = hoistServer api (convertApp pool) controller
+
+convertApp :: ConnectionPool -> App a -> Handler a
+convertApp pool application = runReaderT application pool

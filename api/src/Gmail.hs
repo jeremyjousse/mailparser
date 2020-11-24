@@ -1,4 +1,4 @@
-module Gmail where
+module Gmail (module Gmail, module Gmail.Types) where
 
 import Control.Exception
 import Data.Aeson
@@ -31,6 +31,18 @@ type GmailAPI =
 data GmailError = InvalidToken String | HttpConnectionError String | UnknownError String
   deriving (Show)
 
+-- List messages
+-- Insert each message to db and update message labels
+-- markMessageAsRead
+
+-- listThenUpdateMessagesInDb :: IO (Either GmailError [GmailMessage])
+-- listThenUpdateMessagesInDb = do
+--   messageList <- listMessages
+--   updatedMessages <- callUpdateMessageLabels messageList
+--   return updatedMessages
+--     where callUpdateMessageLabels (Left gmailError) = []
+--           callUpdateMessageLabels (Right messageList) = []
+
 listMessages :: IO (Either GmailError [GmailMessage])
 listMessages = do
   token <- getToken
@@ -45,8 +57,6 @@ updateMessageLabels :: String -> GmailMessageLabelUpdateRequest -> IO (Either Gm
 updateMessageLabels messageId labels = do
   token <- getToken
   callGmailMessageLabelUpdateApi messageId labels ("Bearer " ++ token)
-
--- markMessageAsRead
 
 callGmailMessageDetailApi :: String -> String -> IO (Either GmailError GmailMessageDetail)
 callGmailMessageDetailApi messageId token = do
