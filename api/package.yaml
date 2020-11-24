@@ -27,6 +27,7 @@ dependencies:
   - http-client-tls
   - http-types
   - monad-logger
+  - transformers
   - path-pieces
   - persistent
   - persistent-postgresql

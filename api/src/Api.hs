@@ -2,11 +2,8 @@ module Api where
 
 import Data.Proxy
 import Data.Text
-
 import Database.Persist
-
 import Effects.Database.Types
-
 import Servant.API
 
 type Api =
