@@ -36,6 +36,7 @@ dependencies:
   - servant-client
   - servant-client-core
   - servant-server
+  - template-haskell
   - text
   - warp
 

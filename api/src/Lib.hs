@@ -1,13 +1,13 @@
 module Lib (runApp) where
 
-import Api
+import Adapter.HTTP.Server.Api
+import Adapter.HTTP.Server.Gmail
+import Adapter.PostgreSQL.Models
 import App
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (runStderrLoggingT)
 import Control.Monad.Trans.Reader
-import Controller.Gmail
 import Database.Persist.Postgresql
-import Effects.Database.Types
 import Network.Wai.Handler.Warp as Warp
 import Servant
 

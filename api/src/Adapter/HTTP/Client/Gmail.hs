@@ -1,12 +1,12 @@
-module Gmail (module Gmail, module Gmail.Types) where
+module Adapter.HTTP.Client.Gmail (module Adapter.HTTP.Client.Gmail, module Gmail.Types) where
 
+import Adapter.HTTP.Client.GoogleAuth
 import Control.Exception
 import Data.Aeson
 import Data.Proxy
 import Data.Text (Text)
 import GHC.Generics
 import Gmail.Types
-import GoogleAuth
 import Network.HTTP.Client (newManager)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
 import Network.HTTP.Types.Status

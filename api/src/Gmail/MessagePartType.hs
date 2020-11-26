@@ -1,11 +1,11 @@
 module Gmail.MessagePartType where
 
+import Adapter.HTTP.Client.GoogleAuth
 import Control.Exception
 import Data.Aeson
 import Data.Proxy
 import Data.Text (Text)
 import GHC.Generics
-import GoogleAuth
 import Network.HTTP.Client (newManager)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
 import Servant.API hiding (addHeader)

@@ -1,6 +1,8 @@
-module Controller.Gmail where
+module Adapter.HTTP.Server.Gmail where
 
-import Api
+import qualified Adapter.HTTP.Client.Gmail as GMC
+import Adapter.HTTP.Server.Api
+import qualified Adapter.PostgreSQL.Models as Db
 import App
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Reader
@@ -14,8 +16,7 @@ import Data.Text.Lazy (fromStrict)
 import Data.Text.Lazy.Encoding
 import Database.Persist
 import Database.Persist.Postgresql
-import qualified Effects.Database.Types as Db
-import Gmail
+import qualified Gmail.Types as GMT
 import Servant
 
 controller :: ServerT Api App
@@ -33,7 +34,7 @@ brandGet id = do
   mBrand <- runDB $ selectFirst [Db.BrandId ==. id] []
   return $ entityVal <$> mBrand
 
-brandDelete ::  Key Db.Brand -> App Text
+brandDelete :: Key Db.Brand -> App Text
 brandDelete id = do
   result <- do
     mBrand <- runDB $ selectFirst [Db.BrandId ==. id] []
@@ -65,25 +66,25 @@ brandUpdate id brand = do
 
 updateGmailMessages :: App Text
 updateGmailMessages = do
-  messageList <- liftIO listMessages
+  messageList <- liftIO GMC.listMessages
   case messageList of
     Left gmailError -> throwError $ err500 {errBody = encodeUtf8 $ fromStrict $ pack $ show gmailError}
     Right messageList -> do
-      foo :: [Either GmailError Gmail.GmailMessage] <- traverse updateGmailMessage messageList
+      foo :: [Either GMC.GmailError GMC.GmailMessage] <- traverse updateGmailMessage messageList
       pure $ pack $ show $ rights foo
 
-updateGmailMessage :: Gmail.GmailMessage -> App (Either GmailError Gmail.GmailMessage)
-updateGmailMessage gmailMessage@Gmail.GmailMessage {threadId} = do
-  eitherGmailMessageDetail <- liftIO $ messageDetail threadId
+updateGmailMessage :: GMC.GmailMessage -> App (Either GMC.GmailError GMC.GmailMessage)
+updateGmailMessage gmailMessage@GMC.GmailMessage {threadId} = do
+  eitherGmailMessageDetail <- liftIO $ GMC.messageDetail threadId
   case eitherGmailMessageDetail of
     Left gmailError -> pure $ Left gmailError
     Right gmailMessageDetail -> do
       dbGmailMessage <- runDB $ insert $ mappGmailMessageDetailHttpToGmailMessageDb gmailMessageDetail
       traverse_ updateGmailMessageHeader $ mappGmailMessageDetailHttpToGmailMessageHeaderDb gmailMessageDetail dbGmailMessage
-      liftIO $ updateMessageLabels threadId GmailMessageLabelUpdateRequest {removeLabelIds = ["UNREAD", "INBOX"]}
+      liftIO $ GMC.updateMessageLabels threadId GMT.GmailMessageLabelUpdateRequest {removeLabelIds = ["UNREAD", "INBOX"]}
       pure $ Right gmailMessage
 
-updateGmailMessageHeader :: Db.GmailMessageHeader -> App (Key Db.GmailMessageHeader)
+updateGmailMessageHeader :: Db.EmailMessageHeader -> App (Key Db.EmailMessageHeader)
 updateGmailMessageHeader dbGmailMessageHeader = runDB $ insert dbGmailMessageHeader
 
 runDB :: SqlPersistT IO a -> App a
@@ -91,29 +92,29 @@ runDB query = do
   pool <- ask
   liftIO $ runSqlPool query pool
 
-mappGmailMessageDetailHttpToGmailMessageDb :: GmailMessageDetail -> Db.GmailMessage
-mappGmailMessageDetailHttpToGmailMessageDb GmailMessageDetail {id, threadId, labelIds, snippet, payload, sizeEstimate, historyId, internalDate} =
-  Db.GmailMessage
-    { Db.gmailMessageThreadId = pack threadId,
-      Db.gmailMessageSnippet = pack snippet,
-      Db.gmailMessageSizeEstimate = sizeEstimate,
-      Db.gmailMessageHistoryId = pack historyId,
-      Db.gmailMessageInternalDate = pack internalDate,
-      Db.gmailMessageMimeType = pack (extractMimeType payload)
+mappGmailMessageDetailHttpToGmailMessageDb :: GMT.GmailMessageDetail -> Db.EmailMessage
+mappGmailMessageDetailHttpToGmailMessageDb GMT.GmailMessageDetail {id, threadId, labelIds, snippet, payload, sizeEstimate, historyId, internalDate} =
+  Db.EmailMessage
+    { Db.emailMessageThreadId = pack threadId,
+      Db.emailMessageSnippet = pack snippet,
+      Db.emailMessageSizeEstimate = sizeEstimate,
+      Db.emailMessageHistoryId = pack historyId,
+      Db.emailMessageInternalDate = pack internalDate,
+      Db.emailMessageMimeType = pack (extractMimeType payload)
     }
 
-mappGmailMessageDetailHttpToGmailMessageHeaderDb :: GmailMessageDetail -> Key Db.GmailMessage -> [Db.GmailMessageHeader]
+mappGmailMessageDetailHttpToGmailMessageHeaderDb :: GMT.GmailMessageDetail -> Key Db.EmailMessage -> [Db.EmailMessageHeader]
 mappGmailMessageDetailHttpToGmailMessageHeaderDb gmailMessageDetail dbGmailMessageKey =
   map (\headers -> httpHeaderToBddHeader headers dbGmailMessageKey) messageHeaders
   where
-    messageHeaders = headers $ payload gmailMessageDetail
+    messageHeaders = GMT.headers $ GMT.payload gmailMessageDetail
     httpHeaderToBddHeader headers dbGmailMessage =
-      Db.GmailMessageHeader
-        { Db.gmailMessageHeaderName = pack $ name headers,
-          Db.gmailMessageHeaderValue = pack $ value headers,
-          Db.gmailMessageHeaderGmailMessage = dbGmailMessageKey
+      Db.EmailMessageHeader
+        { Db.emailMessageHeaderName = pack $ GMT.name headers,
+          Db.emailMessageHeaderValue = pack $ GMT.value headers,
+          Db.emailMessageHeaderEmailMessage = dbGmailMessageKey
         }
 
 -- TODO Is this the best way to do, can it be done nativeliy on line 47?
-extractMimeType :: GmailMessagePayload -> String
-extractMimeType GmailMessagePayload {mimeType} = mimeType
+extractMimeType :: GMT.GmailMessagePayload -> String
+extractMimeType GMT.GmailMessagePayload {mimeType} = mimeType

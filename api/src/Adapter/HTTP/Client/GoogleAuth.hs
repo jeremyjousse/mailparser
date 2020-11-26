@@ -1,4 +1,4 @@
-module GoogleAuth where
+module Adapter.HTTP.Client.GoogleAuth where
 
 import Control.Exception
 import Data.Aeson
