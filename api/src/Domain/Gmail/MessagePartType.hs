@@ -1,4 +1,4 @@
-module Gmail.MessagePartType where
+module Domain.Gmail.MessagePartType where
 
 import Adapter.HTTP.Client.GoogleAuth
 import Control.Exception

@@ -16,7 +16,7 @@ import Data.Text.Lazy (fromStrict)
 import Data.Text.Lazy.Encoding
 import Database.Persist
 import Database.Persist.Postgresql
-import qualified Gmail.Types as GMT
+import qualified Domain.Gmail.Types as GMT
 import Servant
 
 controller :: ServerT Api App

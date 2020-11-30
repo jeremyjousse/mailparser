@@ -110,3 +110,12 @@ tests:
       - -with-rtsopts=-N
     dependencies:
       - api
+      - hedgehog # Property based testing
+      - tasty-hedgehog
+      - HUnit # Unit testing
+      - tasty # Test aggregation and discovery
+      - tasty-hspec
+      - tasty-hunit
+      - tasty-discover
+      - aeson-qq # To get Json as raw string
+      - hspec-expectations-pretty-diff # Pretty print differences in case of test failure, useful for big structures comparison

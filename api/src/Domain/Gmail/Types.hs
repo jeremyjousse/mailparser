@@ -1,12 +1,12 @@
-module Gmail.Types where
+module Domain.Gmail.Types where
 
 import Adapter.HTTP.Client.GoogleAuth
 import Control.Exception
 import Data.Aeson
 import Data.Proxy
 import Data.Text (Text)
+import Domain.Gmail.MessagePartType
 import GHC.Generics
-import Gmail.MessagePartType
 import Network.HTTP.Client (newManager)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
 import Servant.API hiding (addHeader)
@@ -51,7 +51,7 @@ data GmailMessageHeader = GmailMessageHeader
   { name :: String,
     value :: String
   }
-  deriving (Generic, Show)
+  deriving (Generic, Show, Eq)
 
 instance FromJSON GmailMessageHeader
 

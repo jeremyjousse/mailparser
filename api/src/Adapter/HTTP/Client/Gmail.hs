@@ -1,12 +1,12 @@
-module Adapter.HTTP.Client.Gmail (module Adapter.HTTP.Client.Gmail, module Gmail.Types) where
+module Adapter.HTTP.Client.Gmail (module Adapter.HTTP.Client.Gmail, module Domain.Gmail.Types) where
 
 import Adapter.HTTP.Client.GoogleAuth
 import Control.Exception
 import Data.Aeson
 import Data.Proxy
 import Data.Text (Text)
+import Domain.Gmail.Types
 import GHC.Generics
-import Gmail.Types
 import Network.HTTP.Client (newManager)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
 import Network.HTTP.Types.Status
@@ -30,18 +30,6 @@ type GmailAPI =
 
 data GmailError = InvalidToken String | HttpConnectionError String | UnknownError String
   deriving (Show)
-
--- List messages
--- Insert each message to db and update message labels
--- markMessageAsRead
-
--- listThenUpdateMessagesInDb :: IO (Either GmailError [GmailMessage])
--- listThenUpdateMessagesInDb = do
---   messageList <- listMessages
---   updatedMessages <- callUpdateMessageLabels messageList
---   return updatedMessages
---     where callUpdateMessageLabels (Left gmailError) = []
---           callUpdateMessageLabels (Right messageList) = []
 
 listMessages :: IO (Either GmailError [GmailMessage])
 listMessages = do
