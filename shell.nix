@@ -78,8 +78,8 @@ in mkShell {
     nixfmt
 
     # Quality of life improvements to start a local server #
-    docker
-    docker-compose
+    # docker
+    # docker-compose
   ];
 
   # Force the Nix path to our frozen set of packages, to ensure Stack-with-Nix uses the correct one rather than the global <nixpkgs>
