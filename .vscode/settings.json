@@ -1,6 +1,7 @@
 {
     "nixEnvSelector.nixShellConfig": "${workspaceRoot}/shell.nix",
     "conventionalCommits.scopes": [
-        "gmail"
+        "gmail",
+        "email-message"
     ]
 }

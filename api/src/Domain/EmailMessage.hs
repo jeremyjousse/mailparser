@@ -10,16 +10,12 @@ data EmailMessageSender = EamilMessageSender
   }
   deriving (Generic, Show)
 
-extractSenderFromHeaders :: [GMT.GmailMessageHeader] -> Maybe GMT.GmailMessageHeader
-extractSenderFromHeaders headers = case filtered of
+extractSenderFromHeader :: [GMT.GmailMessageHeader] -> Maybe GMT.GmailMessageHeader
+extractSenderFromHeader headers = case filtered of
   (x : _) -> Just x
   [] -> Nothing
   where
     filtered = filter (\header -> "From" == GMT.name header) headers
-
--- case filteredHeaders of
---     (x:xs) -> return Just x
---     _ -> return Nothing
 
 extractSenderNameFromSender :: String -> String
 extractSenderNameFromSender = undefined
@@ -27,5 +23,6 @@ extractSenderNameFromSender = undefined
 extractSenderEmailFromSender :: String -> String
 extractSenderEmailFromSender = undefined
 
+-- Use the hackage lib.
 extractSenderMxRecordFromSender :: String -> String
 extractSenderMxRecordFromSender = undefined

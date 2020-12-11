@@ -47,6 +47,9 @@ data GmailMessagePayload = GmailMessagePayload
 
 instance FromJSON GmailMessagePayload
 
+-- | A 'GmailMessageHeader' is defined by a name an a value.
+--
+--  A GmailMessage have a list of multiple 'GmailMessageHeader'
 data GmailMessageHeader = GmailMessageHeader
   { name :: String,
     value :: String

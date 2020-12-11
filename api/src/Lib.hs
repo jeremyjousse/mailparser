@@ -17,11 +17,14 @@ import Servant
 connStr =
   "host=localhost dbname=mailparser user=postgres password=postgres port=5432"
 
+-- | 'runApp' creates the PostgresSQL connection
+-- and then run Servent on the 3000 port
 runApp :: IO ()
 runApp = do
   application <- mkPostgresApp
   Warp.run 3000 application
 
+-- | 'mkPostgresApp' creates the PostgresSQL connection
 mkPostgresApp :: IO Application
 mkPostgresApp = runStderrLoggingT $
   withPostgresqlPool connStr 10 $ \pool -> do
